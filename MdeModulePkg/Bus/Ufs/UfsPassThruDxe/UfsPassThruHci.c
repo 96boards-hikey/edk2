@@ -810,6 +810,7 @@ UfsStartExecCmd (
 {
   UINT32        Data;
   EFI_STATUS    Status;
+  UINT64        Delay;
 
   Status = UfsMmioRead32 (Private, UFS_HC_UTRLRSR_OFFSET, &Data);
   if (EFI_ERROR (Status)) {
@@ -821,6 +822,23 @@ UfsStartExecCmd (
     if (EFI_ERROR (Status)) {
       return Status;
     }
+  }
+
+  Delay = 100;
+  do {
+    Status = UfsMmioRead32 (Private, UFS_HC_UTRLRSR_OFFSET, &Data);
+    if (EFI_ERROR (Status)) {
+      return Status;
+    }
+
+    MicroSecondDelay (1000);
+
+    Delay--;
+  } while ((Data == 0) && (Delay > 0));
+
+  if (Delay == 0) {
+    DEBUG ((EFI_D_ERROR, "UfsStartExecCmd: Failed to set UTP Transfer Request List Run Stop.\n"));
+    return EFI_TIMEOUT;
   }
 
   Status = UfsMmioWrite32 (Private, UFS_HC_UTRLDBR_OFFSET, BIT0 << Slot);
