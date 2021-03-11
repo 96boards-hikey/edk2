@@ -38,7 +38,7 @@
 #define BOOTIMG_HEADER_BLOCKS             1
 #define FDTIMG_HEADER_BLOCKS              1
 
-#define DEFAULT_UNCOMPRESS_BUFFER_SIZE    (32 * 1024 * 1024)
+#define DEFAULT_UNCOMPRESS_BUFFER_SIZE    (64 * 1024 * 1024)
 
 #define IS_DEVICE_PATH_NODE(node,type,subtype) (((node)->Type == (type)) && ((node)->SubType == (subtype)))
 
@@ -110,6 +110,10 @@ UncompressKernel (
   *Kernel = (VOID *)(UINTN)Address;
   *KernelSize = DEFAULT_UNCOMPRESS_BUFFER_SIZE;
   err = GzipDecompress (Source, SourceSize, *Kernel, KernelSize);
+  if (*KernelSize > DEFAULT_UNCOMPRESS_BUFFER_SIZE) {
+    Print (L"ERROR: Decompressed kernel size (%ld) larger then buffer size(%ld)\n", *KernelSize, DEFAULT_UNCOMPRESS_BUFFER_SIZE);
+    return EFI_INVALID_PARAMETER;
+  }
   if (err) {
     return EFI_INVALID_PARAMETER;
   }
